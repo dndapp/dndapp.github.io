@@ -8,6 +8,7 @@ function createCharacterCard(id) {
         }
         return response.json();
       })
+      console.log(data);
       .then(data => {
         // Create a new <div> element for the character card
         var card = document.createElement('div');
@@ -16,8 +17,6 @@ function createCharacterCard(id) {
         // Set the content of the character card using the fetched data
         card.innerHTML = `
           <h2>Name: ${data.id}</h2>
-          <p>Race: ${data.race}</p>
-          <p>Class: ${data.class}</p>
           <!-- Add more properties as needed -->
         `;
   
