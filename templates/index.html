@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Character App</title>
+    <style>
+        .character-card {
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .character-image {
+            width: 100px; /* Adjust the width of the image */
+            height: auto;
+            margin-right: auto;
+            margin-left: auto;
+        }
+        #center {
+            text-align: center;
+            margin-right: 1em;
+        }
+        .divider {
+            height: 2px; /* Adjust the height of the dividing line */
+            width: 100%; /* Makes the line span the entire width of the viewport */
+            background-color: #333; /* Color of the dividing line */
+            margin-top: 20px; /* Adjust the top margin as needed */
+            margin-bottom: 20px; /* Adjust the bottom margin as needed */
+        }
+        .monster-card {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            width: 50%; /* Occupies half of the screen width */
+        }
+        .monster-avatar {
+            width: 75px; /* Adjust the width of the avatar */
+            height: auto;
+            margin-right: 75px;
+        }
+        .monster-details {
+            width: 250px;
+        }
+        .monster-type {
+            width: 120px;
+            text-align: left;
+        }
+        .monster-cr {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>D&D Encounter Builder App</h1>
+
+    <form method="post">
+        <label for="character_id">Character ID:</label>
+        <input type="text" id="character_id" name="character_id" required>
+        <button type="submit">Add Character</button>
+    </form>
+    <p>*Make sure you set your dndbeyond character's to be publicly viewable*</p>
+
+    <h2>Character Cards</h2>
+    {% if character_data_dict %}
+        {% for character_id, character_data in character_data_dict.items() %}
+            <div class="character-card">
+                <div id="center">
+                    <p><strong>{{ character_data['name'] }}</strong></p>
+                    <img src="{{ character_data['avatar_url'] }}" alt="Character Image" class="character-image">
+                </div>
+                <div>
+                    <p><strong>HP:</strong> {{ character_data['current_hp'] }} / {{ character_data['max_hp'] }}</p>
+                    <p><strong>Classes:</strong> {{ character_data['class_info'] }}</p>
+                    <p><strong>Est. AC:</strong> {{ character_data['armorclass'] }}</p>
+                    <p><strong>Initiative:</strong> +{{ character_data['initiative_mod'] }}</p>
+                </div>
+                <div type="hidden" class="character_id" value="{{ character_id }}"></div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No characters added yet.</p>
+    {% endif %}
+    <div class="divider"></div>
+
+    <h1>Encounter Tracker</h1>
+
+    <!-- Display encounter details -->
+    <h2>Encounter Details</h2>
+    <div id="encounter-details">
+        <h3>Monsters in Encounter</h3>
+        <ul>
+            {% if encounter %}
+                {% for monster_name, (count, moncr) in encounter.items() %}
+                    <li>{{ monster_name }} {{ count }}</li>
+                {% endfor %}
+            {% endif %}
+        </ul>
+    </div>
+
+    <!-- Search form -->
+    <h2>Search Monsters</h2>
+    <form method="post" action="/search">
+        <label for="query">Search:</label>
+        <input type="text" id="query" name="query" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Display search results -->
+    {% if query %}
+        <h3>Search Results for "{{ query }}"</h3>
+        {% if results %}
+            <div id="monster-cards-container">
+                {% for monster in results %}
+                    <div class="monster-card">
+                        <div>
+                            <img src="https://5e.tools/img/bestiary/tokens/{{ monster.source }}/{{ monster.name }}.webp" alt="Monster Avatar" class="monster-avatar">
+                        </div>
+                        <div class="monster-details">
+                            <p>{{ monster.name }}</p>
+                        </div>
+                        {% if 'type' in monster.type %}
+                            <div class="monster-type">{{ monster.type['type'] }}</div> <!-- Access the 'type' key -->
+                        {% else %}
+                            <div class="monster-type">{{ monster.type }}</div> <!-- Render directly if 'type' is not nested -->
+                        {% endif %}
+                        <div class="monster-cr">{{ monster.cr }}</div>
+                        <form action="/add_to_encounter" method="post">
+                            <input type="hidden" name="monster_name" value="{{ monster.name }}">
+                            <input type="hidden" name="cr" value="{{ monster.cr }}">
+                            <button type="submit">Add to Encounter</button>
+                        </form>
+                        <form action="/remove_from_encounter" method="post">
+                            <input type="hidden" name="monster_name" value="{{ monster.name }}">
+                            <input type="hidden" name="cr" value="{{ monster.cr }}">
+                            <button type="submit">Remove from Encounter</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    {% endif %}
+
+    
+</body>
+</html>
